@@ -4,6 +4,8 @@ import { ArrowRight } from "phosphor-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/router";
+import { useEffect } from "react";
 
 const registerFormSchema = z.object({
 	username: z.string()
@@ -16,13 +18,21 @@ const registerFormSchema = z.object({
 type RegisterFormData = z.infer<typeof registerFormSchema>
 
 export default function Register() {
-	const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<RegisterFormData>({
-		resolver: zodResolver(registerFormSchema)
+	const { register, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm<RegisterFormData>({
+		resolver: zodResolver(registerFormSchema),
 	});
+
+	const router = useRouter();
 
 	async function handleRegister(data: RegisterFormData) {
 		console.log(data);
 	}
+
+	useEffect(() => {
+		if(router.query.username) {
+			setValue("username", String(router.query.username));
+		}
+	}, [router.query?.username, setValue]);
 
 	return (
 		<Container>
@@ -35,7 +45,7 @@ export default function Register() {
 			<Form as="Form" onSubmit={handleSubmit(handleRegister)}>
 				<label>
 					<Text size="sm">Nome do usuário</Text>
-					<TextInput prefix="ignite.com/" placeholder="seu-usuario" {...register("username")} />
+					<TextInput prefix="ignite.com/" placeholder="seu-usuario" {...register("username")} crossOrigin={undefined} />
 					{ errors.username && (
 						<FormError size="sm">{ errors.username.message }</FormError> 
 					)}
@@ -43,7 +53,7 @@ export default function Register() {
 
 				<label>
 					<Text size="sm">Nome completo</Text>
-					<TextInput placeholder="seu-usuario" {...register("name")} />
+					<TextInput placeholder="seu-usuario" {...register("name")} crossOrigin={undefined} />
 					{ errors.name && (
 						<FormError size="sm">{ errors.name.message }</FormError> 
 					)}
