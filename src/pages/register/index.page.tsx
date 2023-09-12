@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
 import { api } from "@/lib/axios";
+import { AxiosError } from "axios";
 
 const registerFormSchema = z.object({
 	username: z.string()
@@ -31,8 +32,14 @@ export default function Register() {
 				name: data.name,
 				username: data.username,
 			});
+
+			router.push("/register/connect-calendar");
 		} catch (error) {
-			console.log(error);
+			if (error instanceof AxiosError && error?.response?.data?.message) {
+				alert(error.response.data.message);
+			} else {
+				console.log(error);
+			}
 		}
 	}
 
@@ -50,7 +57,7 @@ export default function Register() {
 				<MultiStep size={4} currentStep={1} />
 			</Header>
 
-			<Form as="Form" onSubmit={handleSubmit(handleRegister)}>
+			<Form as="form" onSubmit={handleSubmit(handleRegister)}>
 				<label>
 					<Text size="sm">Nome do usuário</Text>
 					<TextInput prefix="ignite.com/" placeholder="seu-usuario" {...register("username")} crossOrigin={undefined} />
