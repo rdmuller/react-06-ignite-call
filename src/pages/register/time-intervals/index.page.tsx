@@ -1,6 +1,6 @@
 import { Button, Checkbox, Heading, MultiStep, Text, TextInput } from "@ignite-ui/react";
 import { Container, Header } from "../styles";
-import { IntervalBox, IntervalContainer, IntervalDay, IntervalInputs, IntervalItem } from "./style";
+import { IntervalBox, FormError, IntervalContainer, IntervalDay, IntervalInputs, IntervalItem } from "./style";
 import { ArrowRight } from "phosphor-react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
@@ -8,16 +8,22 @@ import { getWeekDays } from "@/utils/get-week-days";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 const timeIntervalsFormSchema = z.object({
-	intervals: z.array(
-		z.object({
-			weekDay: z.number().min(0).max(6),
-			enabled: z.boolean(), 
-			startTime: z.string(), 
-			endTime: z.string()
+	intervals: z
+		.array(
+			z.object({
+				weekDay: z.number().min(0).max(6),
+				enabled: z.boolean(), 
+				startTime: z.string(), 
+				endTime: z.string()
+			})
+		)
+		.length(7, {
+			message: "Array deve conter 7 posições"
 		})
-	)
-		.length(7)
-		.transform(intervals => intervals.filter((interval) => interval.enabled))
+		.transform((intervals) => intervals.filter((interval) => interval.enabled))
+		.refine((intervals) => intervals.length > 0, {
+			message: "Você deve selecionar pelo menos um dia da semana"
+		})
 });
 
 type TimeIntervalsFormData = z.infer<typeof timeIntervalsFormSchema>
@@ -98,6 +104,10 @@ export default function TimeIntervals() {
 						);
 					})}
 				</IntervalContainer>
+
+				{errors.intervals && (
+					<FormError size="sm">{String(errors.intervals.message)}</FormError>
+				)}
 
 				<Button disabled={isSubmitting}>
                     Próximo passo
