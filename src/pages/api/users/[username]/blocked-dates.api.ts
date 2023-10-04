@@ -31,12 +31,21 @@ export default async function handle(req: NextApiRequest, res: NextApiResponse) 
 		return !availableWeekDays.some(availableWeekDay => weekDay === availableWeekDay.week_day);
 	});
 
-	const blockedDatesRaw = await prisma.$queryRaw`
-		SELECT * 
-		FROM schedulings s
+	const blockedDatesRaw: Array<{date: number}> = await prisma.$queryRaw`
+		SELECT 
+		  EXTRACT(DAY FROM s.date) as date, 
+		  count(1)as amount,
+		  (UTI.time_end_in_minutes - UTI.time_start_in_minutes) / 60 as size
+		FROM schedulings s LEFT OUTER JOIN user_time_intervals UTI ON (UTI.week_day = WEEKDAY(DATE_ADD(s.date, INTERVAL 1 DAY)))
 		WHERE s.user_id = ${user.id}
 		  AND DATE_FORMAT(s.date, '%Y-%m') = ${`${year}-${month}`}
+		GROUP BY EXTRACT(DAY FROM s.date), UTI.time_end_in_minutes, UTI.time_start_in_minutes
+		HAVING amount >= size
 	`;
 
-	return res.json({ blockedWeekDays, blockedDatesRaw });
+	const blockedDates = blockedDatesRaw.map(item => item.date);
+	
+	console.log(blockedDates);
+
+	return res.json({ blockedWeekDays, blockedDates });
 }
